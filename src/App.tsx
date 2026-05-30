@@ -32,15 +32,39 @@ const boardForStreet = (h: Hand, s: Street): Card[] => {
 
 const SUIT_GLYPH = ['♣', '♦', '♥', '♠'];
 const isRed = (c: Card) => suitOf(c) === 1 || suitOf(c) === 2;
+const rankGlyph = (s: string) => (s[0] === 'T' ? '10' : s[0]);
 
 const CardView = ({ c, small = false }: { c: Card | null; small?: boolean }) => {
   const cls = `card${small ? ' small' : ''}${c !== null && isRed(c) ? ' red' : ''}${c === null ? ' placeholder' : ''}`;
   if (c === null) return <div className={cls}><span className="rank">?</span><span className="suit">?</span></div>;
   const s = cardStr(c);
+  const rank = rankGlyph(s);
   return (
     <div className={cls}>
-      <span className="rank">{s[0]}</span>
+      <span className={`rank${rank === '10' ? ' ten' : ''}`}>{rank}</span>
       <span className="suit">{SUIT_GLYPH[suitOf(c)]}</span>
+    </div>
+  );
+};
+
+// Big hole-card view with rank in two corners and a big pip background
+const HoleCardView = ({ c }: { c: Card }) => {
+  const red = isRed(c);
+  const s = cardStr(c);
+  const rank = rankGlyph(s);
+  const suit = SUIT_GLYPH[suitOf(c)];
+  const rankCls = `rank${rank === '10' ? ' ten' : ''}`;
+  return (
+    <div className={`card-lg${red ? ' red' : ''}`}>
+      <div className="corner top">
+        <span className={rankCls}>{rank}</span>
+        <span className="suit">{suit}</span>
+      </div>
+      <div className="pip">{suit}</div>
+      <div className="corner bottom">
+        <span className={rankCls}>{rank}</span>
+        <span className="suit">{suit}</span>
+      </div>
     </div>
   );
 };
@@ -113,7 +137,8 @@ export const App = () => {
           { role: 'user', content: user },
         ],
         stream: true,
-        temperature: 0.4,
+        temperature: 0.15,
+        max_tokens: 220,
       });
       let acc = '';
       for await (const chunk of chunks) {
@@ -151,58 +176,61 @@ export const App = () => {
   const streetIdx = STREET_ORDER.indexOf(street);
 
   return (
-    <div className="app">
-      {/* ---------- table ---------- */}
-      <div className="table-wrap">
-        <div className="table">
-          <div className="table-title">
-            Poker Trainer
-            <small>WHAT BEATS YOU?</small>
-          </div>
+    <div className="scene">
+      {/* HUD top */}
+      <div className="hud-top">
+        <div className="brand">
+          NASH
+          <small>WHAT BEATS YOU?</small>
+        </div>
+        <div className="hud-pills">
+          <span className="pill">{STREET_LABEL[street]}</span>
+          <span className="pill muted">
+            {score.total > 0
+              ? `${score.correct}/${score.total}  ·  ${Math.round((score.correct / score.total) * 100)}%`
+              : 'New session'}
+          </span>
+        </div>
+      </div>
 
+      {/* Felt + board + chips, all in 3D perspective */}
+      <div className="felt-wrap">
+        <div className="felt">
+          <div className="felt-title">— Dealer —</div>
+          <div className="dealer-button">D</div>
+          <div className="chip-stack left">
+            <div className="chip-coin black" />
+            <div className="chip-coin blue" />
+            <div className="chip-coin" />
+            <div className="chip-coin green" />
+          </div>
+          <div className="chip-stack right">
+            <div className="chip-coin" />
+            <div className="chip-coin blue" />
+            <div className="chip-coin black" />
+            <div className="chip-coin green" />
+          </div>
           <div className="board">
             {hand.flop.map((c, i) => <CardView key={i} c={c} />)}
             <CardView c={streetIdx >= 1 ? hand.turn : null} />
             <CardView c={streetIdx >= 2 ? hand.river : null} />
           </div>
-
-          <div className="dealer-tag">— Dealer —</div>
-
-          <div className="chips left">
-            <div className="chip" />
-            <div className="chip blue" />
-            <div className="chip black" />
-          </div>
-          <div className="chips right">
-            <div className="chip black" />
-            <div className="chip blue" />
-            <div className="chip" />
-          </div>
-
-          <div className="hero-seat">
-            <div className="hero-cards">
-              <CardView c={hand.hero[0]} />
-              <CardView c={hand.hero[1]} />
-            </div>
-            <div className="hero-label">You</div>
-          </div>
         </div>
       </div>
 
-      {/* ---------- sidebar ---------- */}
-      <div className="sidebar">
-        <h2>What beats you?</h2>
-        <div className="prompt">
-          Select every hand category that currently has you beat on the {STREET_LABEL[street].toLowerCase()}.
+      {/* Hero hole cards in foreground */}
+      <div className="hero-zone">
+        <div className="hole-cards">
+          <HoleCardView c={hand.hero[0]} />
+          <HoleCardView c={hand.hero[1]} />
         </div>
+      </div>
 
-        <div className="status-bar">
-          <span className="street-pill">{STREET_LABEL[street]}</span>
-          <span className="score">
-            {score.total > 0
-              ? `${score.correct}/${score.total} (${Math.round((score.correct / score.total) * 100)}%)`
-              : 'New session'}
-          </span>
+      {/* Action panel — glass HUD, top-right */}
+      <div className="action-panel">
+        <h2 className="action-title">What beats you?</h2>
+        <div className="action-prompt">
+          Select every hand category that currently has you beat on the {STREET_LABEL[street].toLowerCase()}.
         </div>
 
         <div className="cat-list">
@@ -281,15 +309,10 @@ export const App = () => {
         {phase === 'revealed' && (
           <div className="coach-panel">
             <div className="coach-header">
-              <span className="coach-title">AI Coach</span>
-              {coachStatus === 'idle' && (
+              <span className="coach-title">Doyle</span>
+              {(coachStatus === 'idle' || coachStatus === 'ready' || coachStatus === 'error') && (
                 <button className="secondary coach-btn" onClick={askCoach}>
-                  Ask Coach
-                </button>
-              )}
-              {coachStatus === 'ready' && coachOutput && (
-                <button className="secondary coach-btn" onClick={askCoach}>
-                  Ask again
+                  {coachOutput ? 'Ask again' : 'Ask Doyle'}
                 </button>
               )}
               {coachStatus === 'thinking' && (

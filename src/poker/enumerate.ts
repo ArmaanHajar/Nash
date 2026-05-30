@@ -33,7 +33,14 @@ export const enumerateBeats = (
       const v1 = remaining[i], v2 = remaining[j];
       const villain = evaluate([v1, v2, ...board]);
       if (villain.score > heroScore) {
-        const name = HAND_NAMES[villain.category];
+        // Royal Flush = straight flush with Ace high. Decode top tiebreaker from packed score.
+        let name: string;
+        if (villain.category === 8) {
+          const sfHigh = Math.floor(villain.score / 65536) % 16;
+          name = sfHigh === 12 ? 'Royal Flush' : 'Straight Flush';
+        } else {
+          name = HAND_NAMES[villain.category];
+        }
         byCategory[name]++;
         combosByCategory[name].push([v1, v2]);
       }

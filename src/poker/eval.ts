@@ -2,7 +2,7 @@ import { Card, rankOf, suitOf } from './cards';
 
 export const HAND_NAMES = [
   'High Card','Pair','Two Pair','Three of a Kind','Straight',
-  'Flush','Full House','Four of a Kind','Straight Flush',
+  'Flush','Full House','Four of a Kind','Straight Flush','Royal Flush',
 ] as const;
 export type HandCategory = typeof HAND_NAMES[number];
 
