@@ -505,8 +505,128 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 .coach-output.error { color: #f0a8a8; border-left-color: #c25555; }
 
-@media (max-width: 900px) {
-  .action-panel { right: 12px; width: calc(100vw - 24px); max-height: 50vh; top: auto; bottom: 12px; }
+/* ========================================================
+   MOBILE LAYOUT
+   Vertical flow, no 3D perspective, no overlay panel.
+   Doyle is hidden entirely (React also skips rendering him).
+   ======================================================== */
+@media (max-width: 819px) {
   body { overflow: auto; }
-  .scene { height: auto; min-height: 100vh; }
+
+  .scene.mobile {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    perspective: none;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 12px 24px;
+    gap: 12px;
+  }
+
+  /* --- HUD bar: compact at top --- */
+  .scene.mobile .hud-top {
+    position: static;
+    padding: 8px 4px 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .scene.mobile .brand { font-size: 16px; letter-spacing: 0.35em; }
+  .scene.mobile .brand small { font-size: 8px; letter-spacing: 0.3em; }
+  .scene.mobile .pill { font-size: 10px; padding: 5px 10px; }
+
+  /* --- Felt: flatten to a top-down oval card area --- */
+  .scene.mobile .felt-wrap {
+    position: static;
+    padding: 0;
+    transform-style: flat;
+  }
+  .scene.mobile .felt {
+    --felt-tilt: 0deg;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 5 / 3;
+    transform: none;
+    border-radius: 50% / 35%;
+    box-shadow:
+      inset 0 0 60px rgba(0,0,0,0.55),
+      0 0 0 8px var(--rail),
+      0 0 0 9px rgba(212,175,55,0.3),
+      0 0 0 14px var(--rail-light),
+      0 20px 40px rgba(0,0,0,0.7);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .scene.mobile .felt-title,
+  .scene.mobile .dealer-button,
+  .scene.mobile .chip-stack { display: none; }
+  .scene.mobile .felt::after { display: none; }
+
+  /* Board centered on the small felt */
+  .scene.mobile .board {
+    position: static;
+    transform: none;
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+  .scene.mobile .card {
+    width: 42px;
+    height: 60px;
+    border-radius: 6px;
+  }
+  .scene.mobile .card .rank { font-size: 18px; }
+  .scene.mobile .card .suit { font-size: 16px; }
+  .scene.mobile .card .rank.ten { font-size: 16px; }
+
+  /* --- Hero hole cards: under the felt, not floating --- */
+  .scene.mobile .hero-zone {
+    position: static;
+    transform: none;
+    margin: 4px auto 0;
+  }
+  .scene.mobile .hole-cards { gap: 4px; }
+  .scene.mobile .hole-cards .card-lg {
+    width: 70px;
+    height: 98px;
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+  .scene.mobile .hole-cards .card-lg .corner .rank { font-size: 18px; }
+  .scene.mobile .hole-cards .card-lg .corner .suit { font-size: 16px; }
+  .scene.mobile .hole-cards .card-lg .corner .rank.ten { font-size: 16px; }
+  .scene.mobile .hole-cards .card-lg .pip { font-size: 32px; }
+  .scene.mobile .hole-cards .card-lg:nth-child(1) { transform: rotate(-4deg) translateX(8px); }
+  .scene.mobile .hole-cards .card-lg:nth-child(2) { transform: rotate(4deg) translateX(-8px); }
+
+  /* --- Action panel: inline below hero, not overlay --- */
+  .scene.mobile .action-panel {
+    position: static;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .scene.mobile .action-prompt { font-size: 11px; }
+  .scene.mobile .cat-list { gap: 5px; }
+  .scene.mobile .cat-row { padding: 8px 10px; gap: 7px; }
+  .scene.mobile .cat-name { font-size: 12px; }
+  .scene.mobile .cat-badge { font-size: 9px; padding: 2px 6px; }
+  .scene.mobile .info-btn { width: 18px; height: 18px; font-size: 10px; }
+  .scene.mobile button { padding: 12px 14px; font-size: 12px; }
+
+  /* combo reveal: scroll inside the inline panel */
+  .scene.mobile .combo-list { max-height: 140px; }
+  .scene.mobile .card.small { width: 26px; height: 36px; }
+  .scene.mobile .card.small .rank { font-size: 11px; }
+  .scene.mobile .card.small .suit { font-size: 11px; }
+
+  /* Doyle is hidden (also not rendered in React) */
+  .scene.mobile .coach-panel { display: none; }
 }

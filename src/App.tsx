@@ -1,8 +1,21 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, cardStr, fullDeck, shuffle, suitOf } from './poker/cards';
 import { HAND_NAMES } from './poker/eval';
 import { enumerateBeats } from './poker/enumerate';
 import { buildCoachPrompt, isWebGPUSupported, loadCoach } from './llm/coach';
+
+const MOBILE_BREAKPOINT = 820;
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT,
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return isMobile;
+};
 
 type Street = 'flop' | 'turn' | 'river';
 type Phase = 'guessing' | 'revealed';
@@ -74,6 +87,7 @@ const STREET_LABEL: Record<Street, string> = { flop: 'Flop', turn: 'Turn', river
 const MAX_COMBOS_SHOWN = 24;
 
 export const App = () => {
+  const isMobile = useIsMobile();
   const [hand, setHand] = useState<Hand>(() => dealHand());
   const [street, setStreet] = useState<Street>('flop');
   const [phase, setPhase] = useState<Phase>('guessing');
@@ -176,7 +190,7 @@ export const App = () => {
   const streetIdx = STREET_ORDER.indexOf(street);
 
   return (
-    <div className="scene">
+    <div className={`scene${isMobile ? ' mobile' : ''}`}>
       {/* HUD top */}
       <div className="hud-top">
         <div className="brand">
@@ -306,7 +320,7 @@ export const App = () => {
           </div>
         )}
 
-        {phase === 'revealed' && (
+        {phase === 'revealed' && !isMobile && (
           <div className="coach-panel">
             <div className="coach-header">
               <span className="coach-title">Doyle</span>
