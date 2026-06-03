@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Outer dark ring (chip edge shadow) -->
+  <circle cx="32" cy="32" r="31" fill="#2b160a"/>
+  <!-- Gold rim -->
+  <circle cx="32" cy="32" r="29" fill="#d4af37"/>
+  <!-- Inner felt face -->
+  <circle cx="32" cy="32" r="25" fill="#0e6b3a"/>
+  <!-- Chip pattern: small gold ticks around the rim (8 ticks) -->
+  <g fill="#d4af37">
+    <rect x="31" y="3"  width="2" height="6" rx="1"/>
+    <rect x="31" y="55" width="2" height="6" rx="1"/>
+    <rect x="3"  y="31" width="6" height="2" rx="1"/>
+    <rect x="55" y="31" width="6" height="2" rx="1"/>
+    <rect x="31" y="3"  width="2" height="6" rx="1" transform="rotate(45 32 32)"/>
+    <rect x="31" y="3"  width="2" height="6" rx="1" transform="rotate(-45 32 32)"/>
+    <rect x="31" y="55" width="2" height="6" rx="1" transform="rotate(45 32 32)"/>
+    <rect x="31" y="55" width="2" height="6" rx="1" transform="rotate(-45 32 32)"/>
+  </g>
+  <!-- N wordmark -->
+  <text x="32" y="44" font-family="Georgia, serif" font-size="30" font-weight="700"
+        fill="#d4af37" text-anchor="middle" letter-spacing="0">N</text>
+</svg>

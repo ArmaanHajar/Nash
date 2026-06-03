@@ -101,7 +101,7 @@ body {
   top: 0; left: 0; right: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 20px 28px;
   z-index: 30;
 }
@@ -208,6 +208,40 @@ body {
   transform-origin: center bottom;
   display: flex;
   gap: 10px;
+}
+
+/* Made-hand label: floats above the dealer button, counter-rotated so it
+   reads upright relative to the camera. Pure visual readout — non-interactive. */
+.made-hand-label {
+  position: absolute;
+  top: 56%;
+  left: 50%;
+  transform: translate(-50%, 0) rotateX(calc(-1 * var(--felt-tilt)));
+  transform-origin: center bottom;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 18px;
+  background: rgba(10, 6, 2, 0.55);
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.made-hand-prefix {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.made-hand-text {
+  font-family: 'Georgia', serif;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 0.04em;
 }
 
 /* dealer button & chips — these are flat objects sitting on the felt,
@@ -423,6 +457,34 @@ body {
   letter-spacing: 0.05em;
 }
 .cat.locked .cat-row { cursor: default; }
+
+/* Best-hand picker uses the same .cat tile but the whole label is interactive */
+.best-cat {
+  flex-direction: row;
+}
+.best-cat > label,
+label.best-cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+label.best-cat input[type="radio"] {
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+label.best-cat .cat-name { font-size: 13px; flex: 1; }
+label.best-cat.picked { background: rgba(212,175,55,0.12); border-color: rgba(212,175,55,0.45); }
+label.best-cat.locked { cursor: default; }
+label.best-cat.locked input[type="radio"] { cursor: default; }
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  margin: 6px 0;
+}
 .cat.correct { background: rgba(56, 142, 90, 0.18); border-color: rgba(78, 169, 106, 0.4); }
 .cat.correct .cat-badge { background: rgba(78, 169, 106, 0.22); color: #b8eccb; }
 .cat.missed  { background: rgba(180, 100, 40, 0.16); border-color: rgba(212, 136, 74, 0.4); }
@@ -829,6 +891,14 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   .scene.mobile .felt-title,
   .scene.mobile .dealer-button,
   .scene.mobile .chip-stack { display: none; }
+  /* On mobile, show the made-hand label as a flat pill above the board */
+  .scene.mobile .made-hand-label {
+    position: static;
+    transform: none;
+    margin: 0 auto 8px;
+    padding: 6px 14px;
+  }
+  .scene.mobile .made-hand-text { font-size: 12px; }
   .scene.mobile .felt::after { display: none; }
 
   /* Board centered on the small felt */

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, cardStr, fullDeck, shuffle, suitOf } from './poker/cards';
 import { HAND_NAMES } from './poker/eval';
 import { enumerateBeats } from './poker/enumerate';
+import { bestPossibleCategory, describeMadeHand } from './poker/describe';
 import { buildCoachPrompt, isWebGPUSupported, loadCoach } from './llm/coach';
 import { PreflopChart } from './components/PreflopChart';
 
@@ -121,6 +122,7 @@ const Trainer = () => {
   const [street, setStreet] = useState<Street>('flop');
   const [phase, setPhase] = useState<Phase>('guessing');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bestGuess, setBestGuess] = useState<string | null>(null);
   const [revealedCat, setRevealedCat] = useState<string | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
 
@@ -132,6 +134,9 @@ const Trainer = () => {
 
   const board = boardForStreet(hand, street);
   const breakdown = useMemo(() => enumerateBeats(hand.hero, board), [hand, street]);
+  const madeHand = useMemo(() => describeMadeHand(hand.hero, board), [hand, street]);
+  const bestCatIdx = useMemo(() => bestPossibleCategory(hand.hero, board), [hand, street]);
+  const bestCatName = HAND_NAMES[bestCatIdx];
 
   const presentCategories = HAND_NAMES.filter(n => breakdown.byCategory[n] > 0);
 
@@ -150,7 +155,9 @@ const Trainer = () => {
       const isPresent = correctSet.has(n);
       if (guessed === isPresent) correct++;
     }
-    setScore(s => ({ correct: s.correct + correct, total: s.total + HAND_NAMES.length }));
+    // +1 score for the best-hand guess (out of total +1)
+    if (bestGuess === bestCatName) correct++;
+    setScore(s => ({ correct: s.correct + correct, total: s.total + HAND_NAMES.length + 1 }));
     setPhase('revealed');
   };
 
@@ -201,6 +208,7 @@ const Trainer = () => {
     if (idx < STREET_ORDER.length - 1) {
       setStreet(STREET_ORDER[idx + 1]);
       setSelected(new Set());
+      setBestGuess(null);
       setRevealedCat(null);
       setCoachOutput('');
       setPhase('guessing');
@@ -222,9 +230,6 @@ const Trainer = () => {
     <div className={`scene${isMobile ? ' mobile' : ''}`}>
       {/* HUD top */}
       <div className="hud-top">
-        <div className="brand">
-          <small>WHAT BEATS YOU?</small>
-        </div>
         <div className="hud-pills">
           <span className="pill">{STREET_LABEL[street]}</span>
           <span className="pill muted">
@@ -239,6 +244,10 @@ const Trainer = () => {
       <div className="felt-wrap">
         <div className="felt">
           <div className="felt-title">— Dealer —</div>
+          <div className="made-hand-label">
+            <span className="made-hand-prefix">Your hand</span>
+            <span className="made-hand-text">{madeHand}</span>
+          </div>
           <div className="dealer-button">D</div>
           <div className="chip-stack left">
             <div className="chip-coin black" />
@@ -270,6 +279,40 @@ const Trainer = () => {
 
       {/* Action panel — glass HUD, top-right */}
       <div className="action-panel">
+        <h2 className="action-title">Best hand you can make</h2>
+        <div className="action-prompt">
+          Pick the highest-ranking hand you could end up with by the river{street !== 'river' ? '' : ' (your final hand on this river)'}.
+        </div>
+        <div className="cat-list best-list">
+          {HAND_NAMES.map(name => {
+            const isPicked = bestGuess === name;
+            const isCorrect = name === bestCatName;
+            let cls = 'cat best-cat';
+            if (phase === 'revealed') {
+              cls += ' locked';
+              if (isCorrect && isPicked) cls += ' correct';
+              else if (isCorrect && !isPicked) cls += ' missed';
+              else if (!isCorrect && isPicked) cls += ' wrong';
+            } else if (isPicked) {
+              cls += ' picked';
+            }
+            return (
+              <label key={name} className={cls}>
+                <input
+                  type="radio"
+                  name="best-hand"
+                  checked={isPicked}
+                  disabled={phase === 'revealed'}
+                  onChange={() => phase === 'guessing' && setBestGuess(name)}
+                />
+                <span className="cat-name">{name}</span>
+              </label>
+            );
+          })}
+        </div>
+
+        <div className="section-divider" />
+
         <h2 className="action-title">What beats you?</h2>
         <div className="action-prompt">
           Select every hand category that currently has you beat on the {STREET_LABEL[street].toLowerCase()}.
