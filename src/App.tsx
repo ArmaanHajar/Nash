@@ -3,6 +3,9 @@ import { Card, cardStr, fullDeck, shuffle, suitOf } from './poker/cards';
 import { HAND_NAMES } from './poker/eval';
 import { enumerateBeats } from './poker/enumerate';
 import { buildCoachPrompt, isWebGPUSupported, loadCoach } from './llm/coach';
+import { PreflopChart } from './components/PreflopChart';
+
+type Tab = 'trainer' | 'chart';
 
 const MOBILE_BREAKPOINT = 820;
 const useIsMobile = () => {
@@ -87,6 +90,32 @@ const STREET_LABEL: Record<Street, string> = { flop: 'Flop', turn: 'Turn', river
 const MAX_COMBOS_SHOWN = 24;
 
 export const App = () => {
+  const [tab, setTab] = useState<Tab>('trainer');
+  return (
+    <>
+      <nav className="tabs-bar">
+        <span className="tabs-brand">NASH</span>
+        <div className="tabs">
+          <button
+            className={`tab${tab === 'trainer' ? ' active' : ''}`}
+            onClick={() => setTab('trainer')}
+          >
+            Trainer
+          </button>
+          <button
+            className={`tab${tab === 'chart' ? ' active' : ''}`}
+            onClick={() => setTab('chart')}
+          >
+            Preflop Chart
+          </button>
+        </div>
+      </nav>
+      {tab === 'trainer' ? <Trainer /> : <PreflopChart />}
+    </>
+  );
+};
+
+const Trainer = () => {
   const isMobile = useIsMobile();
   const [hand, setHand] = useState<Hand>(() => dealHand());
   const [street, setStreet] = useState<Street>('flop');
@@ -194,7 +223,6 @@ export const App = () => {
       {/* HUD top */}
       <div className="hud-top">
         <div className="brand">
-          NASH
           <small>WHAT BEATS YOU?</small>
         </div>
         <div className="hud-pills">
